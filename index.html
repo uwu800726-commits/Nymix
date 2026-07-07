@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nymix MVP</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 { color: #ff3333; margin-bottom: 30px; }
+        .card {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+        .btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        .btn:hover { background-color: #444; }
+        .btn:disabled { background-color: #222; color: #555; cursor: not-allowed; }
+        .btn-primary { background-color: #ff3333; }
+        .btn-primary:hover { background-color: #cc0000; }
+        .status-text { font-size: 14px; color: #888; margin-top: 10px; }
+        .hidden { display: none; }
+        .highlight { color: #00ffcc; font-weight: bold; font-size: 18px; }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #ff3333;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nymix Node MVP</h1>
+        <div class="card">
+            <button id="connectWalletBtn" class="btn">Conectar Wallet</button>
+            <p id="walletStatus" class="status-text">Wallet no conectada</p>
+        </div>
+        <div class="card">
+            <button id="testNetworkBtn" class="btn btn-primary" disabled>Iniciar Test de Red</button>
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Midiendo latencia y ancho de banda...</p>
+            </div>
+            <div id="results" class="hidden">
+                <h3>Resultados del Nodo:</h3>
+                <p id="pingResult"></p>
+                <p id="downResult"></p>
+                <p id="upResult"></p>
+                <p id="rewardResult" class="highlight"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userWallet = null;
+
+        document.getElementById('connectWalletBtn').addEventListener('click', () => {
+            userWallet = "0x" + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+            document.getElementById('walletStatus').innerText = `Conectado: ${userWallet.substring(0,6)}...${userWallet.substring(38)}`;
+            document.getElementById('walletStatus').style.color = '#00ffcc';
+            document.getElementById('testNetworkBtn').disabled = false;
+        });
+
+        document.getElementById('testNetworkBtn').addEventListener('click', async () => {
+            const loadingDiv = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            const testBtn = document.getElementById('testNetworkBtn');
+
+            testBtn.disabled = true;
+            loadingDiv.classList.remove('hidden');
+            resultsDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/submit_test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wallet: userWallet })
+                });
+
+                const resData = await response.json();
+                loadingDiv.classList.add('hidden');
+                resultsDiv.classList.remove('hidden');
+
+                if (response.ok) {
+                    document.getElementById('pingResult').innerText = `Ping: ${resData.results.ping}`;
+                    document.getElementById('downResult').innerText = `Ancho de banda (Bajada): ${resData.results.download_speed}`;
+                    document.getElementById('upResult').innerText = `Ancho de banda (Subida): ${resData.results.upload_speed}`;
+                    document.getElementById('rewardResult').innerText = `+${resData.reward_points} Puntos Nymix asignados al nodo!`;
+                } else {
+                    document.getElementById('pingResult').innerText = `Estado: ${resData.error}`;
+                    document.getElementById('downResult').innerText = '';
+                    document.getElementById('upResult').innerText = '';
+                    document.getElementById('rewardResult').innerText = '';
+                }
+            } catch (err) {
+                loadingDiv.classList.add('hidden');
+                resultsDiv.classList.remove('hidden');
+                document.getElementById('pingResult').innerText = "Error de conexión con el backend local.";
+            }
+            testBtn.disabled = false;
+        });
+    </script>
+</body>
+</html>
