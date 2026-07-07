@@ -21,5 +21,21 @@ This repository contains the functional pre-seed MVP architecture running a loca
 ### Prerequisites
 Ensure you have a localized Python 3 environment active along with the required web microframework dependency:
 
-```bash
 pip install flask
+Execution
+Run the local telemetry instance directly via your terminal:
+
+Bash
+python3 server.py
+Once initialized, point your browser destination to http://127.0.0.1:5000 to interact with the local node management panel.
+
+Technical Roadmap
+[x] Functional local telemetry server setup & interface unification.
+
+[x] In-memory anti-farming IP throttling heuristics.
+
+[ ] Migration of local point-accounting balances to on-chain smart contracts (Polygon/Solana).
+
+[ ] Implementation of decentralized cryptographic proof-of-location validation.
+
+[ ] Public distributed multi-node testnet onboarding.
